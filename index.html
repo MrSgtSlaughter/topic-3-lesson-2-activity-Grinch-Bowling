@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The Grinch Review Bowling</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <title>Santa's Strike Bowling: Karana Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
@@ -173,7 +170,7 @@
         }
 
         /* QUIZ MODAL STYLES */
-        #quiz-modal {
+        #quiz-modal, #leaderboard-modal {
             display: none;
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -185,7 +182,7 @@
             backdrop-filter: blur(5px);
         }
         
-        #quiz-content {
+        #quiz-content, #leaderboard-content {
             background: linear-gradient(180deg, #1a2f4b 0%, #0b1026 100%);
             border: 4px solid #ffd700;
             border-radius: 20px;
@@ -198,7 +195,7 @@
             position: relative;
         }
 
-        #quiz-content h2 {
+        h2 {
             color: #ffd700;
             margin-top: 0;
             font-size: 28px;
@@ -242,6 +239,11 @@
             background: #721c24 !important;
             border-color: #dc3545 !important;
         }
+        
+        .quiz-option.disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
 
         #quiz-feedback {
             min-height: 20px;
@@ -249,210 +251,43 @@
             margin-top: 10px;
         }
 
-        /* ===== TITLE SCREEN STYLES ===== */
-        #title-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #0b1026 0%, #1a472a 50%, #0b1026 100%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        #title-screen.hidden {
-            display: none;
-        }
-
-        .title-grinch-emoji {
-            font-size: 100px;
-            animation: grinchBounce 1s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px #39FF14);
-        }
-
-        @keyframes grinchBounce {
-            0%, 100% { transform: translateY(0) rotate(-5deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-        }
-
-        .title-main {
-            font-family: 'Mountains of Christmas', cursive;
-            font-size: 72px;
-            color: #39FF14;
-            text-shadow: 
-                0 0 10px #39FF14,
-                0 0 20px #39FF14,
-                0 0 40px #1a472a,
-                4px 4px 0 #c41e3a;
-            margin: 20px 0;
-            text-align: center;
-            animation: titleGlow 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes titleGlow {
-            0% { text-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14, 0 0 40px #1a472a, 4px 4px 0 #c41e3a; }
-            100% { text-shadow: 0 0 20px #39FF14, 0 0 40px #39FF14, 0 0 60px #1a472a, 4px 4px 0 #c41e3a; }
-        }
-
-        .title-subtitle {
-            font-family: 'Mountains of Christmas', cursive;
-            font-size: 28px;
-            color: #ffd700;
-            text-shadow: 2px 2px 0 #000;
-            margin-bottom: 30px;
-        }
-
-        .title-input-container {
-            background: rgba(0, 50, 20, 0.8);
-            padding: 30px 40px;
-            border-radius: 20px;
-            border: 3px solid #39FF14;
-            box-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
-            text-align: center;
-            margin: 20px;
-        }
-
-        .title-input-label {
-            font-family: 'Mountains of Christmas', cursive;
-            font-size: 24px;
-            color: #ffd700;
-            display: block;
-            margin-bottom: 15px;
-        }
-
-        #player-name-input {
-            font-family: 'Mountains of Christmas', cursive;
-            font-size: 24px;
-            padding: 15px 25px;
-            border: 3px solid #c41e3a;
-            border-radius: 10px;
-            background: #0b1026;
-            color: #fff;
-            text-align: center;
-            width: 250px;
-            outline: none;
-        }
-
-        #player-name-input:focus {
-            border-color: #39FF14;
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
-        }
-
-        #player-name-input::placeholder {
-            color: #666;
-        }
-
-        .title-start-btn {
-            font-family: 'Mountains of Christmas', cursive;
-            font-size: 32px;
-            padding: 15px 50px;
-            background: linear-gradient(180deg, #c41e3a 0%, #8b0000 100%);
-            color: #ffd700;
-            border: 3px solid #ffd700;
-            border-radius: 15px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .title-start-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            background: linear-gradient(180deg, #ff2a4a 0%, #c41e3a 100%);
-        }
-
-        /* Leaderboard Panel */
-        .title-leaderboard {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px 30px;
-            border-radius: 15px;
-            border: 2px solid #ffd700;
-            margin-top: 30px;
-            min-width: 300px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .title-leaderboard h3 {
-            font-family: 'Mountains of Christmas', cursive;
-            color: #ffd700;
-            font-size: 28px;
-            margin: 0 0 15px 0;
-            text-align: center;
-            border-bottom: 2px solid #39FF14;
-            padding-bottom: 10px;
-        }
-
-        .leaderboard-entry {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 10px;
-            margin: 5px 0;
-            background: rgba(57, 255, 20, 0.1);
-            border-radius: 8px;
-            font-family: 'Mountains of Christmas', cursive;
+        /* Leaderboard Specifics */
+        #name-input {
+            padding: 10px;
             font-size: 18px;
-        }
-
-        .leaderboard-entry:nth-child(2) {
-            background: rgba(255, 215, 0, 0.3);
-            border: 1px solid #ffd700;
-        }
-
-        .leaderboard-entry:nth-child(3) {
-            background: rgba(192, 192, 192, 0.3);
-            border: 1px solid #c0c0c0;
-        }
-
-        .leaderboard-entry:nth-child(4) {
-            background: rgba(205, 127, 50, 0.3);
-            border: 1px solid #cd7f32;
-        }
-
-        .leaderboard-name {
+            border-radius: 5px;
+            border: 2px solid #ffd700;
+            background: #000;
             color: #fff;
+            font-family: 'Cinzel', serif;
+            width: 60%;
         }
-
-        .leaderboard-score {
-            color: #39FF14;
-            font-weight: bold;
-        }
-
-        .leaderboard-empty {
-            color: #888;
-            text-align: center;
-            font-style: italic;
-            padding: 20px;
-        }
-
-        /* Snowflakes decoration */
-        .snowflake {
-            position: absolute;
+        
+        #submit-score-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #c41e3a;
             color: #fff;
-            font-size: 20px;
-            opacity: 0.7;
-            animation: snowfall linear infinite;
-            pointer-events: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
         }
 
-        @keyframes snowfall {
-            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            color: white;
         }
-
-        /* Grinch decorations */
-        .grinch-decor {
-            position: absolute;
-            font-size: 40px;
-            opacity: 0.3;
-            pointer-events: none;
+        th, td {
+            border-bottom: 1px solid #444;
+            padding: 8px;
+            text-align: left;
         }
+        th { color: #ffd700; }
+        .rank-col { width: 40px; text-align: center; }
+        .score-col-table { text-align: right; }
 
     </style>
     <!-- Load Libraries -->
@@ -460,28 +295,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
-
-    <!-- ===== TITLE SCREEN ===== -->
-    <div id="title-screen">
-        <!-- Snowflakes will be added by JS -->
-        <div class="title-grinch-emoji">🎳</div>
-        <h1 class="title-main">THE GRINCH<br>REVIEW BOWLING</h1>
-        <p class="title-subtitle">🎄 Test Your Knowledge & Strike Down Pins! 🎄</p>
-        
-        <div class="title-input-container">
-            <label class="title-input-label">Enter Your Name:</label>
-            <input type="text" id="player-name-input" placeholder="Your Name" maxlength="20">
-            <br>
-            <button class="title-start-btn" id="start-game-btn">🎳 LET'S BOWL! 🎳</button>
-        </div>
-
-        <div class="title-leaderboard">
-            <h3>🏆 TOP BOWLERS 🏆</h3>
-            <div id="leaderboard-list">
-                <div class="leaderboard-empty">Loading scores...</div>
-            </div>
-        </div>
-    </div>
 
     <div id="ui-layer">
         <div id="score-board">
@@ -513,7 +326,7 @@
         <img id="opponent-img" src="karana.png" alt="Karana Grinch">
 
         <div style="text-align: center; pointer-events: auto;">
-            <div id="controls-hint">Drag forward to throw!</div>
+            <div id="controls-hint">Drag or use Keys to throw!</div>
             <button id="reset-btn">Play Again</button>
         </div>
     </div>
@@ -523,136 +336,171 @@
         <div id="quiz-content">
             <h2>Frame Review</h2>
             <div id="quiz-question">Question goes here...</div>
-            <div id="quiz-options">
-                <!-- Options injected by JS -->
-            </div>
+            <div id="quiz-options"></div>
             <div id="quiz-feedback"></div>
         </div>
     </div>
 
-    <script>
-        // ===== FIREBASE CONFIGURATION =====
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-3Nf96W-AKn-J2gyn9krCB3n5O5iISOo",
-            authDomain: "cell-battle-game.firebaseapp.com",
-            databaseURL: "https://cell-battle-game-default-rtdb.firebaseio.com",
-            projectId: "cell-battle-game",
-            storageBucket: "cell-battle-game.firebasestorage.app",
-            messagingSenderId: "482967839438",
-            appId: "1:482967839438:web:7b291ef4b2d2bc098a269f"
-        };
-
-        let database;
-        let firebaseEnabled = false;
-        let playerName = '';
-
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            firebaseEnabled = true;
-            console.log("Firebase connected!");
-        } catch (error) {
-            console.warn("Firebase not configured:", error);
-        }
-
-        // ===== TITLE SCREEN FUNCTIONS =====
-        function createSnowflakes() {
-            const titleScreen = document.getElementById('title-screen');
-            const snowflakes = ['❄', '❅', '❆', '✻', '✼'];
-            for (let i = 0; i < 30; i++) {
-                const flake = document.createElement('div');
-                flake.className = 'snowflake';
-                flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
-                flake.style.left = Math.random() * 100 + '%';
-                flake.style.animationDuration = (3 + Math.random() * 4) + 's';
-                flake.style.animationDelay = Math.random() * 5 + 's';
-                flake.style.fontSize = (15 + Math.random() * 20) + 'px';
-                titleScreen.appendChild(flake);
-            }
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal">
+        <div id="leaderboard-content">
+            <h2>Top 10 High Scores</h2>
             
-            // Add grinch decorations
-            const decorations = ['🎄', '🎁', '⭐', '🔔', '🎅'];
-            for (let i = 0; i < 10; i++) {
-                const decor = document.createElement('div');
-                decor.className = 'grinch-decor';
-                decor.textContent = decorations[Math.floor(Math.random() * decorations.length)];
-                decor.style.left = Math.random() * 100 + '%';
-                decor.style.top = Math.random() * 100 + '%';
-                titleScreen.appendChild(decor);
-            }
-        }
+            <div id="input-container" style="margin-bottom: 20px; display:none;">
+                <p>New High Score!</p>
+                <input type="text" id="name-input" placeholder="Enter Name" maxlength="10">
+                <button id="submit-score-btn">Save</button>
+            </div>
 
-        function loadLeaderboard() {
-            if (!firebaseEnabled) {
-                document.getElementById('leaderboard-list').innerHTML = 
-                    '<div class="leaderboard-empty">Leaderboard unavailable</div>';
-                return;
-            }
+            <div id="loading-scores">Loading...</div>
+            <table id="scores-table">
+                <thead>
+                    <tr>
+                        <th class="rank-col">#</th>
+                        <th>Name</th>
+                        <th class="score-col-table">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="scores-body">
+                    <!-- Scores populated by JS -->
+                </tbody>
+            </table>
+            <br>
+            <button onclick="document.getElementById('leaderboard-modal').style.display='none'; document.getElementById('reset-btn').style.display='block';" style="background:#333; color:white; border:1px solid #666; padding:5px 10px; cursor:pointer;">Close</button>
+        </div>
+    </div>
 
-            database.ref('grinch-bowling/scores')
-                .orderByChild('score')
-                .limitToLast(10)
-                .on('value', (snapshot) => {
-                    const scores = [];
-                    snapshot.forEach((child) => {
-                        scores.push(child.val());
-                    });
-                    
-                    // Sort descending
-                    scores.sort((a, b) => b.score - a.score);
-                    
-                    const listEl = document.getElementById('leaderboard-list');
-                    if (scores.length === 0) {
-                        listEl.innerHTML = '<div class="leaderboard-empty">No scores yet. Be the first!</div>';
-                    } else {
-                        listEl.innerHTML = scores.map((entry, idx) => {
-                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-                            return `<div class="leaderboard-entry">
-                                <span class="leaderboard-name">${medal} ${entry.name}</span>
-                                <span class="leaderboard-score">${entry.score}</span>
-                            </div>`;
-                        }).join('');
+    <script type="module">
+        // --- FIREBASE SETUP ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Hybrid Storage Manager (Firebase with LocalStorage fallback)
+        class ScoreManager {
+            constructor() {
+                this.useFirebase = false;
+                this.db = null;
+                this.scores = [];
+                this.appId = 'default-bowling-app';
+                
+                // Check if environment variables exist
+                if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
+                    try {
+                        const firebaseConfig = JSON.parse(__firebase_config);
+                        const app = initializeApp(firebaseConfig);
+                        const auth = getAuth(app);
+                        this.db = getFirestore(app);
+                        this.appId = __app_id;
+                        this.useFirebase = true;
+                        
+                        // FIX: Auth required for Rules. Wait for it before listening.
+                        this.initAuth(auth);
+                        
+                    } catch (e) {
+                        console.log("Firebase init failed, falling back to LocalStorage", e);
+                        this.loadLocal();
                     }
-                });
-        }
-
-        function saveScore(name, score) {
-            if (!firebaseEnabled || !name) return;
-            
-            const scoreId = 'score_' + Date.now();
-            database.ref('grinch-bowling/scores/' + scoreId).set({
-                name: name,
-                score: score,
-                timestamp: Date.now()
-            });
-        }
-
-        function startGameFromTitle() {
-            const nameInput = document.getElementById('player-name-input');
-            playerName = nameInput.value.trim();
-            
-            if (!playerName) {
-                nameInput.style.borderColor = '#ff0000';
-                nameInput.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.5)';
-                nameInput.placeholder = 'Please enter name!';
-                return;
+                } else {
+                    console.log("No Firebase config, using LocalStorage");
+                    this.loadLocal();
+                }
             }
-            
-            document.getElementById('title-screen').classList.add('hidden');
-            startNewTurn();
+
+            async initAuth(auth) {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    // Auth successful, start listening
+                    this.listenToScores();
+                } catch (error) {
+                    console.error("Auth failed, falling back to local:", error);
+                    this.useFirebase = false;
+                    this.loadLocal();
+                }
+            }
+
+            listenToScores() {
+                if (!this.useFirebase) return;
+                // RULE 2: No orderBy in query. Fetch all, sort in memory.
+                const q = collection(this.db, 'artifacts', this.appId, 'public', 'data', 'scores');
+                onSnapshot(q, (snapshot) => {
+                    const temp = [];
+                    snapshot.forEach(doc => temp.push(doc.data()));
+                    this.processScores(temp);
+                }, (error) => {
+                    console.error("Firestore error, fallback to local", error);
+                    this.useFirebase = false; 
+                    this.loadLocal();
+                });
+            }
+
+            loadLocal() {
+                const stored = localStorage.getItem('bowling_scores');
+                if (stored) {
+                    this.processScores(JSON.parse(stored));
+                } else {
+                    this.processScores([]);
+                }
+            }
+
+            saveLocal() {
+                localStorage.setItem('bowling_scores', JSON.stringify(this.scores));
+                // Reload to update UI immediately in local mode
+                this.processScores(this.scores);
+            }
+
+            processScores(rawData) {
+                // Sort descending by score
+                rawData.sort((a, b) => b.score - a.score);
+                // Keep Top 10
+                this.scores = rawData.slice(0, 10);
+                this.updateUI();
+            }
+
+            updateUI() {
+                const tbody = document.getElementById('scores-body');
+                const loading = document.getElementById('loading-scores');
+                if(loading) loading.style.display = 'none';
+                
+                tbody.innerHTML = '';
+                this.scores.forEach((s, index) => {
+                    const row = `<tr>
+                        <td class="rank-col">${index + 1}</td>
+                        <td>${s.name}</td>
+                        <td class="score-col-table">${s.score}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            }
+
+            async addScore(name, score) {
+                const newEntry = { name: name, score: score, timestamp: Date.now() };
+                
+                if (this.useFirebase) {
+                    try {
+                        await addDoc(collection(this.db, 'artifacts', this.appId, 'public', 'data', 'scores'), newEntry);
+                    } catch (e) {
+                        console.error("Add doc failed", e);
+                        // Fallback to local if add fails
+                        this.useFirebase = false;
+                        this.scores.push(newEntry);
+                        this.saveLocal();
+                    }
+                } else {
+                    this.scores.push(newEntry);
+                    this.saveLocal();
+                }
+            }
         }
 
-        // Initialize title screen
-        document.addEventListener('DOMContentLoaded', () => {
-            createSnowflakes();
-            loadLeaderboard();
-            
-            document.getElementById('start-game-btn').addEventListener('click', startGameFromTitle);
-            document.getElementById('player-name-input').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') startGameFromTitle();
-            });
-        });
+        window.scoreManager = new ScoreManager();
+    </script>
 
+    <script>
         // --- QUIZ DATA ---
         const QUIZ_DATA = [
             { q: "What writing system did the ancient Egyptians use?", options: ["Cuneiform", "Hieroglyphics", "Latin", "Sanskrit"], answer: 1 },
@@ -685,7 +533,7 @@
             ballRadius: 1.2,
             ballMass: 8, 
             pinMass: 0.1,
-            quizPoints: 50,
+            quizPoints: 1, 
             grinchBonus: 50, 
             colors: {
                 floor: 0x1a1a2e,
@@ -710,6 +558,7 @@
         
         let gameState = 'ANIMATING'; 
         let isOpponentTurn = false;
+        let quizLocked = false; 
         
         let frame = 1;
         let throwInFrame = 1;
@@ -773,8 +622,19 @@
             return new THREE.CanvasTexture(canvas);
         }
 
+        // --- UTILS ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         // --- INIT THREE.JS & PHYSICS ---
         function init() {
+            // Shuffle Quiz Data
+            shuffleArray(QUIZ_DATA);
+
             scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x0b1026, 0.02);
 
@@ -834,10 +694,20 @@
             
             document.getElementById('reset-btn').addEventListener('click', resetGame);
             document.getElementById('music-btn').addEventListener('click', toggleMusic);
+            
+            // Leaderboard Listeners
+            document.getElementById('submit-score-btn').addEventListener('click', submitScore);
 
             animate();
-            // Game will start when player clicks start on title screen
-            // startNewTurn() is called from startGameFromTitle()
+            startNewTurn();
+        }
+
+        function submitScore() {
+            const name = document.getElementById('name-input').value;
+            if(!name) return;
+            
+            window.scoreManager.addScore(name, totalScore);
+            document.getElementById('input-container').style.display = 'none';
         }
 
         // --- MUSIC LOGIC ---
@@ -1075,11 +945,9 @@
                         // GRINCH LOGIC
                         if(pin.isGrinch && !pin.bonusAwarded) {
                             pin.bonusAwarded = true;
-                            // Only award Bonus if it's Player's turn
-                            if(!isOpponentTurn) {
-                                currentFrameScore += CONFIG.grinchBonus;
-                                grinchBonusThisTurn = true;
-                            }
+                            // Bonus applies to whoever is bowling!
+                            currentFrameScore += CONFIG.grinchBonus;
+                            grinchBonusThisTurn = true;
                         }
                     } else {
                         standingPinIndices.push(idx);
@@ -1248,6 +1116,7 @@
         // --- QUIZ LOGIC ---
         function showQuiz(currentFrame) {
             gameState = 'QUIZ';
+            quizLocked = false; // Reset lock for new quiz
             const modal = document.getElementById('quiz-modal');
             const qEl = document.getElementById('quiz-question');
             const oEl = document.getElementById('quiz-options');
@@ -1269,26 +1138,35 @@
         }
 
         function checkAnswer(selected, correct, btn) {
+            // Prevent spamming / Double clicks
+            if (quizLocked) return;
+            quizLocked = true; // Lock immediately
+
             const fEl = document.getElementById('quiz-feedback');
             const modal = document.getElementById('quiz-modal');
             
+            // Disable all buttons visually
+            const allBtns = document.querySelectorAll('.quiz-option');
+            allBtns.forEach(b => b.classList.add('disabled'));
+
             if (selected === correct) {
                 btn.classList.add('correct');
                 fEl.style.color = '#28a745';
                 totalScore += CONFIG.quizPoints;
                 document.getElementById('score-display').innerText = totalScore;
-                fEl.innerText = "Correct! + " + CONFIG.quizPoints + " points!";
-                
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    // Pass turn to Opponent
-                    startOpponentTurn();
-                }, 1500);
+                fEl.innerText = "Correct! + " + CONFIG.quizPoints + " point!";
             } else {
                 btn.classList.add('wrong');
                 fEl.style.color = '#dc3545';
-                fEl.innerText = "Incorrect. Try again!";
+                fEl.innerText = "Incorrect.";
             }
+            
+            // Proceed automatically (Single Attempt Logic)
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Pass turn to Opponent
+                startOpponentTurn();
+            }, 2000);
         }
 
         function proceedToNextFrame() {
@@ -1299,13 +1177,12 @@
                 else msg += "\nKARANA WINS!";
                 showMessage(msg);
                 
-                // Save score to Firebase
-                if (playerName && totalScore > 0) {
-                    saveScore(playerName, totalScore);
-                }
-                
-                document.getElementById('reset-btn').style.display = 'block';
+                // SHOW LEADERBOARD
+                document.getElementById('leaderboard-modal').style.display = 'flex';
+                document.getElementById('input-container').style.display = 'block';
+                document.getElementById('name-input').value = '';
                 document.getElementById('controls-hint').style.display = 'none';
+                gameState = 'GAMEOVER';
             } else {
                 resetPins();
                 document.getElementById('frame-display').innerText = frame;
@@ -1400,13 +1277,6 @@
             resetPins();
             startNewTurn();
         }
-        
-        function backToTitle() {
-            document.getElementById('title-screen').classList.remove('hidden');
-            document.getElementById('reset-btn').style.display = 'none';
-            loadLeaderboard(); // Refresh leaderboard
-            resetGame();
-        }
 
         function showMessage(text) {
             const el = document.getElementById('message-area');
@@ -1420,6 +1290,69 @@
         }
 
         // --- INPUT HANDLING ---
+        // KEYBOARD CONTROLS
+        window.addEventListener('keydown', (e) => {
+            if (isOpponentTurn) return; // Ignore inputs during opponent turn
+            
+            // PRE-THROW AIMING
+            if (gameState === 'AIMING') {
+                const moveSpeed = 0.2; 
+
+                // Steering
+                if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                    if (ballBody.position.x > -4) {
+                        ballBody.position.x -= moveSpeed;
+                        ballBody.velocity.set(0,0,0);
+                        ballBody.angularVelocity.set(0,0,0);
+                    }
+                }
+                if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                    if (ballBody.position.x < 4) {
+                        ballBody.position.x += moveSpeed;
+                        ballBody.velocity.set(0,0,0);
+                        ballBody.angularVelocity.set(0,0,0);
+                    }
+                }
+                
+                // Throwing (Space, Enter, Up, W)
+                if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    tryStartMusic(); 
+                    
+                    gameState = 'ROLLING';
+                    
+                    const power = 75;
+                    const curve = 0;
+
+                    ballBody.velocity.set(curve, 0, -power);
+                    ballBody.angularVelocity.set(power, 0, 0);
+                    
+                    document.getElementById('controls-hint').style.opacity = 0;
+
+                    setTimeout(() => {
+                        if (gameState === 'ROLLING') {
+                            settleRound();
+                        }
+                    }, 6000);
+                }
+            }
+            // MID-ROLL CURVING (AFTER-TOUCH)
+            else if (gameState === 'ROLLING') {
+                const curveStrength = 0.8; // Strength of the nudge
+                
+                if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                    // Apply force to the left
+                    ballBody.velocity.x -= curveStrength;
+                    // Add spin for realism
+                    ballBody.angularVelocity.y += 0.5; 
+                }
+                if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                    // Apply force to the right
+                    ballBody.velocity.x += curveStrength;
+                    ballBody.angularVelocity.y -= 0.5;
+                }
+            }
+        });
+
         function onPointerDown(e) {
             tryStartMusic();
             if(gameState !== 'AIMING' || isOpponentTurn) return;
@@ -1476,7 +1409,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            if(gameState !== 'QUIZ' && gameState !== 'ANIMATING') {
+            if(gameState !== 'QUIZ' && gameState !== 'ANIMATING' && gameState !== 'GAMEOVER') {
                 updatePhysics();
             }
             if(particles) {
