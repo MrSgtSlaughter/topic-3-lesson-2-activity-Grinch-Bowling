@@ -169,9 +169,9 @@
             100% { left: 100%; opacity: 0; }
         }
 
-        /* QUIZ MODAL STYLES */
-        #quiz-modal, #leaderboard-modal {
-            display: none;
+        /* START SCREEN & MODAL STYLES */
+        #start-screen, #quiz-modal, #leaderboard-modal {
+            display: flex; /* Flex by default for start screen */
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85);
@@ -182,7 +182,11 @@
             backdrop-filter: blur(5px);
         }
         
-        #quiz-content, #leaderboard-content {
+        #quiz-modal, #leaderboard-modal {
+            display: none; /* Hidden by default */
+        }
+        
+        #start-content, #quiz-content, #leaderboard-content {
             background: linear-gradient(180deg, #1a2f4b 0%, #0b1026 100%);
             border: 4px solid #ffd700;
             border-radius: 20px;
@@ -195,10 +199,18 @@
             position: relative;
         }
 
-        h2 {
+        h1 {
             color: #ffd700;
-            margin-top: 0;
-            font-size: 28px;
+            margin: 0;
+            font-size: 48px;
+            text-shadow: 0 0 10px #c41e3a;
+            font-family: 'Mountains of Christmas', cursive;
+        }
+
+        h2 {
+            color: #fff;
+            margin-top: 10px;
+            font-size: 24px;
             border-bottom: 1px solid #c41e3a;
             padding-bottom: 10px;
         }
@@ -251,27 +263,35 @@
             margin-top: 10px;
         }
 
-        /* Leaderboard Specifics */
-        #name-input {
-            padding: 10px;
-            font-size: 18px;
-            border-radius: 5px;
+        /* Inputs */
+        #start-name-input, #name-input {
+            padding: 12px;
+            font-size: 20px;
+            border-radius: 8px;
             border: 2px solid #ffd700;
             background: #000;
             color: #fff;
             font-family: 'Cinzel', serif;
-            width: 60%;
+            width: 70%;
+            margin: 20px 0;
+            text-align: center;
         }
         
-        #submit-score-btn {
-            padding: 10px 20px;
-            font-size: 18px;
+        #start-game-btn, #submit-score-btn {
+            padding: 12px 30px;
+            font-size: 22px;
             background: #c41e3a;
             color: #fff;
-            border: none;
-            border-radius: 5px;
+            border: 2px solid #ffd700;
+            border-radius: 8px;
             cursor: pointer;
-            font-family: 'Cinzel', serif;
+            font-family: 'Mountains of Christmas', cursive;
+            transition: transform 0.1s;
+        }
+        
+        #start-game-btn:hover, #submit-score-btn:hover {
+            background: #a01830;
+            transform: scale(1.05);
         }
 
         table {
@@ -288,6 +308,13 @@
         th { color: #ffd700; }
         .rank-col { width: 40px; text-align: center; }
         .score-col-table { text-align: right; }
+        
+        #connection-status {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 10px;
+            text-align: right;
+        }
 
     </style>
     <!-- Load Libraries -->
@@ -303,7 +330,7 @@
                 <div id="frame-display">1</div>
             </div>
             <div class="score-col">
-                <div class="frame-indicator">PLAYER</div>
+                <div id="player-name-label" class="frame-indicator">PLAYER</div>
                 <div id="score-display">0</div>
             </div>
              <div class="score-col">
@@ -331,6 +358,18 @@
         </div>
     </div>
 
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <div id="start-content">
+            <h1>Santa's Strike</h1>
+            <h2>Karana Edition</h2>
+            <p style="color: #aaa; font-size: 16px;">Review Egypt while you bowl!</p>
+            <input type="text" id="start-name-input" placeholder="Enter Your Name" maxlength="12">
+            <br>
+            <button id="start-game-btn">START GAME</button>
+        </div>
+    </div>
+
     <!-- Quiz Modal -->
     <div id="quiz-modal">
         <div id="quiz-content">
@@ -348,7 +387,7 @@
             
             <div id="input-container" style="margin-bottom: 20px; display:none;">
                 <p>New High Score!</p>
-                <input type="text" id="name-input" placeholder="Enter Name" maxlength="10">
+                <input type="text" id="name-input" placeholder="Enter Name" maxlength="12">
                 <button id="submit-score-btn">Save</button>
             </div>
 
@@ -365,6 +404,7 @@
                     <!-- Scores populated by JS -->
                 </tbody>
             </table>
+            <div id="connection-status">Connecting...</div>
             <br>
             <button onclick="document.getElementById('leaderboard-modal').style.display='none'; document.getElementById('reset-btn').style.display='block';" style="background:#333; color:white; border:1px solid #666; padding:5px 10px; cursor:pointer;">Close</button>
         </div>
@@ -373,7 +413,7 @@
     <script type="module">
         // --- FIREBASE SETUP ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Hybrid Storage Manager (Firebase with LocalStorage fallback)
@@ -382,59 +422,56 @@
                 this.useFirebase = false;
                 this.db = null;
                 this.scores = [];
-                this.appId = 'default-bowling-app';
+                this.appId = typeof __app_id !== 'undefined' ? __app_id : 'santa-bowling-game';
                 
-                // Check if environment variables exist
-                if (typeof __firebase_config !== 'undefined' && typeof __app_id !== 'undefined') {
-                    try {
-                        const firebaseConfig = JSON.parse(__firebase_config);
-                        const app = initializeApp(firebaseConfig);
-                        const auth = getAuth(app);
-                        this.db = getFirestore(app);
-                        this.appId = __app_id;
-                        this.useFirebase = true;
-                        
-                        // FIX: Auth required for Rules. Wait for it before listening.
-                        this.initAuth(auth);
-                        
-                    } catch (e) {
-                        console.log("Firebase init failed, falling back to LocalStorage", e);
-                        this.loadLocal();
-                    }
-                } else {
-                    console.log("No Firebase config, using LocalStorage");
-                    this.loadLocal();
-                }
-            }
+                const firebaseConfig = {
+                  apiKey: "AIzaSyC-3Nf96W-AKn-J2gyn9krCB3n5O5iISOo",
+                  authDomain: "cell-battle-game.firebaseapp.com",
+                  databaseURL: "https://cell-battle-game-default-rtdb.firebaseio.com",
+                  projectId: "cell-battle-game",
+                  storageBucket: "cell-battle-game.firebasestorage.app",
+                  messagingSenderId: "482967839438",
+                  appId: "1:482967839438:web:7b291ef4b2d2bc098a269f"
+                };
 
-            async initAuth(auth) {
                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    // Auth successful, start listening
-                    this.listenToScores();
-                } catch (error) {
-                    console.error("Auth failed, falling back to local:", error);
+                    const app = initializeApp(firebaseConfig);
+                    const auth = getAuth(app);
+                    this.db = getFirestore(app);
+                    this.useFirebase = true;
+                    
+                    signInAnonymously(auth)
+                        .then(() => {
+                            this.listenToScores();
+                            this.updateStatus(true);
+                        })
+                        .catch((error) => {
+                            console.warn("Leaderboard switching to Offline Mode (Firebase Auth failed).");
+                            this.useFirebase = false;
+                            this.loadLocal();
+                            this.updateStatus(false);
+                        });
+                    
+                } catch (e) {
+                    console.warn("Firebase init failed, falling back to LocalStorage");
                     this.useFirebase = false;
                     this.loadLocal();
+                    this.updateStatus(false);
                 }
             }
 
             listenToScores() {
                 if (!this.useFirebase) return;
-                // RULE 2: No orderBy in query. Fetch all, sort in memory.
                 const q = collection(this.db, 'artifacts', this.appId, 'public', 'data', 'scores');
                 onSnapshot(q, (snapshot) => {
                     const temp = [];
                     snapshot.forEach(doc => temp.push(doc.data()));
                     this.processScores(temp);
                 }, (error) => {
-                    console.error("Firestore error, fallback to local", error);
+                    console.warn("Firestore error, fallback to local", error);
                     this.useFirebase = false; 
                     this.loadLocal();
+                    this.updateStatus(false);
                 });
             }
 
@@ -449,14 +486,11 @@
 
             saveLocal() {
                 localStorage.setItem('bowling_scores', JSON.stringify(this.scores));
-                // Reload to update UI immediately in local mode
                 this.processScores(this.scores);
             }
 
             processScores(rawData) {
-                // Sort descending by score
                 rawData.sort((a, b) => b.score - a.score);
-                // Keep Top 10
                 this.scores = rawData.slice(0, 10);
                 this.updateUI();
             }
@@ -476,6 +510,17 @@
                     tbody.innerHTML += row;
                 });
             }
+            
+            updateStatus(isOnline) {
+                const el = document.getElementById('connection-status');
+                if(isOnline) {
+                    el.innerText = "Status: Live (Firebase)";
+                    el.style.color = "#28a745";
+                } else {
+                    el.innerText = "Status: Offline (Local)";
+                    el.style.color = "#aaa";
+                }
+            }
 
             async addScore(name, score) {
                 const newEntry = { name: name, score: score, timestamp: Date.now() };
@@ -484,11 +529,11 @@
                     try {
                         await addDoc(collection(this.db, 'artifacts', this.appId, 'public', 'data', 'scores'), newEntry);
                     } catch (e) {
-                        console.error("Add doc failed", e);
-                        // Fallback to local if add fails
+                        console.error("Add doc failed, fallback to local", e);
                         this.useFirebase = false;
                         this.scores.push(newEntry);
                         this.saveLocal();
+                        this.updateStatus(false);
                     }
                 } else {
                     this.scores.push(newEntry);
@@ -566,6 +611,7 @@
         let opponentTotalScore = 0;
         let currentFrameScore = 0;
         let pinsDownInFirstThrow = 0;
+        let playerName = "Player"; // Default
         
         // --- AUDIO ---
         const bgMusic = new Audio('background.mp3');
@@ -695,10 +741,25 @@
             document.getElementById('reset-btn').addEventListener('click', resetGame);
             document.getElementById('music-btn').addEventListener('click', toggleMusic);
             
-            // Leaderboard Listeners
+            // Start Logic
+            document.getElementById('start-game-btn').addEventListener('click', startGame);
             document.getElementById('submit-score-btn').addEventListener('click', submitScore);
 
             animate();
+            // Wait for Start Button
+        }
+
+        function startGame() {
+            const input = document.getElementById('start-name-input');
+            if(input.value.trim() !== "") {
+                playerName = input.value.trim().substring(0, 12); // Limit len
+            }
+            
+            // Update UI Name
+            document.getElementById('player-name-label').innerText = playerName.toUpperCase();
+            
+            document.getElementById('start-screen').style.display = 'none';
+            tryStartMusic();
             startNewTurn();
         }
 
@@ -1180,7 +1241,7 @@
                 // SHOW LEADERBOARD
                 document.getElementById('leaderboard-modal').style.display = 'flex';
                 document.getElementById('input-container').style.display = 'block';
-                document.getElementById('name-input').value = '';
+                document.getElementById('name-input').value = playerName; // Pre-fill name
                 document.getElementById('controls-hint').style.display = 'none';
                 gameState = 'GAMEOVER';
             } else {
@@ -1274,8 +1335,10 @@
             document.getElementById('reset-btn').style.display = 'none';
             document.getElementById('opponent-img').classList.remove('active');
             
-            resetPins();
-            startNewTurn();
+            // Show start screen again
+            document.getElementById('start-screen').style.display = 'flex';
+            document.getElementById('leaderboard-modal').style.display = 'none';
+            // Wait for user to click Start Game again
         }
 
         function showMessage(text) {
