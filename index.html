@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Santa's Strike Bowling: Karana Edition</title>
+    <title>The Grinch Review Bowling</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
@@ -246,12 +249,239 @@
             margin-top: 10px;
         }
 
+        /* ===== TITLE SCREEN STYLES ===== */
+        #title-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0b1026 0%, #1a472a 50%, #0b1026 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #title-screen.hidden {
+            display: none;
+        }
+
+        .title-grinch-emoji {
+            font-size: 100px;
+            animation: grinchBounce 1s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px #39FF14);
+        }
+
+        @keyframes grinchBounce {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .title-main {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 72px;
+            color: #39FF14;
+            text-shadow: 
+                0 0 10px #39FF14,
+                0 0 20px #39FF14,
+                0 0 40px #1a472a,
+                4px 4px 0 #c41e3a;
+            margin: 20px 0;
+            text-align: center;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14, 0 0 40px #1a472a, 4px 4px 0 #c41e3a; }
+            100% { text-shadow: 0 0 20px #39FF14, 0 0 40px #39FF14, 0 0 60px #1a472a, 4px 4px 0 #c41e3a; }
+        }
+
+        .title-subtitle {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 28px;
+            color: #ffd700;
+            text-shadow: 2px 2px 0 #000;
+            margin-bottom: 30px;
+        }
+
+        .title-input-container {
+            background: rgba(0, 50, 20, 0.8);
+            padding: 30px 40px;
+            border-radius: 20px;
+            border: 3px solid #39FF14;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.3);
+            text-align: center;
+            margin: 20px;
+        }
+
+        .title-input-label {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 24px;
+            color: #ffd700;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        #player-name-input {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 24px;
+            padding: 15px 25px;
+            border: 3px solid #c41e3a;
+            border-radius: 10px;
+            background: #0b1026;
+            color: #fff;
+            text-align: center;
+            width: 250px;
+            outline: none;
+        }
+
+        #player-name-input:focus {
+            border-color: #39FF14;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+        }
+
+        #player-name-input::placeholder {
+            color: #666;
+        }
+
+        .title-start-btn {
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 32px;
+            padding: 15px 50px;
+            background: linear-gradient(180deg, #c41e3a 0%, #8b0000 100%);
+            color: #ffd700;
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .title-start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(180deg, #ff2a4a 0%, #c41e3a 100%);
+        }
+
+        /* Leaderboard Panel */
+        .title-leaderboard {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            margin-top: 30px;
+            min-width: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .title-leaderboard h3 {
+            font-family: 'Mountains of Christmas', cursive;
+            color: #ffd700;
+            font-size: 28px;
+            margin: 0 0 15px 0;
+            text-align: center;
+            border-bottom: 2px solid #39FF14;
+            padding-bottom: 10px;
+        }
+
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            margin: 5px 0;
+            background: rgba(57, 255, 20, 0.1);
+            border-radius: 8px;
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 18px;
+        }
+
+        .leaderboard-entry:nth-child(2) {
+            background: rgba(255, 215, 0, 0.3);
+            border: 1px solid #ffd700;
+        }
+
+        .leaderboard-entry:nth-child(3) {
+            background: rgba(192, 192, 192, 0.3);
+            border: 1px solid #c0c0c0;
+        }
+
+        .leaderboard-entry:nth-child(4) {
+            background: rgba(205, 127, 50, 0.3);
+            border: 1px solid #cd7f32;
+        }
+
+        .leaderboard-name {
+            color: #fff;
+        }
+
+        .leaderboard-score {
+            color: #39FF14;
+            font-weight: bold;
+        }
+
+        .leaderboard-empty {
+            color: #888;
+            text-align: center;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Snowflakes decoration */
+        .snowflake {
+            position: absolute;
+            color: #fff;
+            font-size: 20px;
+            opacity: 0.7;
+            animation: snowfall linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes snowfall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0.3; }
+        }
+
+        /* Grinch decorations */
+        .grinch-decor {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
     </style>
     <!-- Load Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div id="title-screen">
+        <!-- Snowflakes will be added by JS -->
+        <div class="title-grinch-emoji">🎳</div>
+        <h1 class="title-main">THE GRINCH<br>REVIEW BOWLING</h1>
+        <p class="title-subtitle">🎄 Test Your Knowledge & Strike Down Pins! 🎄</p>
+        
+        <div class="title-input-container">
+            <label class="title-input-label">Enter Your Name:</label>
+            <input type="text" id="player-name-input" placeholder="Your Name" maxlength="20">
+            <br>
+            <button class="title-start-btn" id="start-game-btn">🎳 LET'S BOWL! 🎳</button>
+        </div>
+
+        <div class="title-leaderboard">
+            <h3>🏆 TOP BOWLERS 🏆</h3>
+            <div id="leaderboard-list">
+                <div class="leaderboard-empty">Loading scores...</div>
+            </div>
+        </div>
+    </div>
 
     <div id="ui-layer">
         <div id="score-board">
@@ -301,6 +531,128 @@
     </div>
 
     <script>
+        // ===== FIREBASE CONFIGURATION =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-3Nf96W-AKn-J2gyn9krCB3n5O5iISOo",
+            authDomain: "cell-battle-game.firebaseapp.com",
+            databaseURL: "https://cell-battle-game-default-rtdb.firebaseio.com",
+            projectId: "cell-battle-game",
+            storageBucket: "cell-battle-game.firebasestorage.app",
+            messagingSenderId: "482967839438",
+            appId: "1:482967839438:web:7b291ef4b2d2bc098a269f"
+        };
+
+        let database;
+        let firebaseEnabled = false;
+        let playerName = '';
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            firebaseEnabled = true;
+            console.log("Firebase connected!");
+        } catch (error) {
+            console.warn("Firebase not configured:", error);
+        }
+
+        // ===== TITLE SCREEN FUNCTIONS =====
+        function createSnowflakes() {
+            const titleScreen = document.getElementById('title-screen');
+            const snowflakes = ['❄', '❅', '❆', '✻', '✼'];
+            for (let i = 0; i < 30; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                flake.style.left = Math.random() * 100 + '%';
+                flake.style.animationDuration = (3 + Math.random() * 4) + 's';
+                flake.style.animationDelay = Math.random() * 5 + 's';
+                flake.style.fontSize = (15 + Math.random() * 20) + 'px';
+                titleScreen.appendChild(flake);
+            }
+            
+            // Add grinch decorations
+            const decorations = ['🎄', '🎁', '⭐', '🔔', '🎅'];
+            for (let i = 0; i < 10; i++) {
+                const decor = document.createElement('div');
+                decor.className = 'grinch-decor';
+                decor.textContent = decorations[Math.floor(Math.random() * decorations.length)];
+                decor.style.left = Math.random() * 100 + '%';
+                decor.style.top = Math.random() * 100 + '%';
+                titleScreen.appendChild(decor);
+            }
+        }
+
+        function loadLeaderboard() {
+            if (!firebaseEnabled) {
+                document.getElementById('leaderboard-list').innerHTML = 
+                    '<div class="leaderboard-empty">Leaderboard unavailable</div>';
+                return;
+            }
+
+            database.ref('grinch-bowling/scores')
+                .orderByChild('score')
+                .limitToLast(10)
+                .on('value', (snapshot) => {
+                    const scores = [];
+                    snapshot.forEach((child) => {
+                        scores.push(child.val());
+                    });
+                    
+                    // Sort descending
+                    scores.sort((a, b) => b.score - a.score);
+                    
+                    const listEl = document.getElementById('leaderboard-list');
+                    if (scores.length === 0) {
+                        listEl.innerHTML = '<div class="leaderboard-empty">No scores yet. Be the first!</div>';
+                    } else {
+                        listEl.innerHTML = scores.map((entry, idx) => {
+                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                            return `<div class="leaderboard-entry">
+                                <span class="leaderboard-name">${medal} ${entry.name}</span>
+                                <span class="leaderboard-score">${entry.score}</span>
+                            </div>`;
+                        }).join('');
+                    }
+                });
+        }
+
+        function saveScore(name, score) {
+            if (!firebaseEnabled || !name) return;
+            
+            const scoreId = 'score_' + Date.now();
+            database.ref('grinch-bowling/scores/' + scoreId).set({
+                name: name,
+                score: score,
+                timestamp: Date.now()
+            });
+        }
+
+        function startGameFromTitle() {
+            const nameInput = document.getElementById('player-name-input');
+            playerName = nameInput.value.trim();
+            
+            if (!playerName) {
+                nameInput.style.borderColor = '#ff0000';
+                nameInput.style.boxShadow = '0 0 15px rgba(255, 0, 0, 0.5)';
+                nameInput.placeholder = 'Please enter name!';
+                return;
+            }
+            
+            document.getElementById('title-screen').classList.add('hidden');
+            startNewTurn();
+        }
+
+        // Initialize title screen
+        document.addEventListener('DOMContentLoaded', () => {
+            createSnowflakes();
+            loadLeaderboard();
+            
+            document.getElementById('start-game-btn').addEventListener('click', startGameFromTitle);
+            document.getElementById('player-name-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') startGameFromTitle();
+            });
+        });
+
         // --- QUIZ DATA ---
         const QUIZ_DATA = [
             { q: "What writing system did the ancient Egyptians use?", options: ["Cuneiform", "Hieroglyphics", "Latin", "Sanskrit"], answer: 1 },
@@ -484,7 +836,8 @@
             document.getElementById('music-btn').addEventListener('click', toggleMusic);
 
             animate();
-            startNewTurn();
+            // Game will start when player clicks start on title screen
+            // startNewTurn() is called from startGameFromTitle()
         }
 
         // --- MUSIC LOGIC ---
@@ -945,6 +1298,12 @@
                 if(totalScore > opponentTotalScore) msg += "\nYOU WIN!";
                 else msg += "\nKARANA WINS!";
                 showMessage(msg);
+                
+                // Save score to Firebase
+                if (playerName && totalScore > 0) {
+                    saveScore(playerName, totalScore);
+                }
+                
                 document.getElementById('reset-btn').style.display = 'block';
                 document.getElementById('controls-hint').style.display = 'none';
             } else {
@@ -1040,6 +1399,13 @@
             
             resetPins();
             startNewTurn();
+        }
+        
+        function backToTitle() {
+            document.getElementById('title-screen').classList.remove('hidden');
+            document.getElementById('reset-btn').style.display = 'none';
+            loadLeaderboard(); // Refresh leaderboard
+            resetGame();
         }
 
         function showMessage(text) {
