@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Santa's Strike Bowling: Karana Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b1026;
+            font-family: 'Mountains of Christmas', cursive;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #fff;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #00ff00;
+            z-index: 10;
+        }
+
+        #score-board {
+            display: flex;
+            justify-content: space-between;
+            font-size: 24px;
+            background: rgba(0, 50, 20, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #c41e3a;
+            max-width: 95%;
+            margin: 0 auto;
+        }
+
+        .score-col {
+            text-align: center;
+            margin: 0 10px;
+            min-width: 60px;
+        }
+
+        .karana-score {
+            color: #39FF14;
+            text-shadow: 0 0 5px #000;
+        }
+
+        #message-area {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            color: #ffd700;
+            text-shadow: 0 0 20px #c41e3a, 2px 2px 0px #000;
+            pointer-events: none;
+            width: 100%;
+            z-index: 20;
+            white-space: pre-line;
+        }
+
+        #controls-hint {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 20px;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            display: none; 
+        }
+
+        #reset-btn {
+            pointer-events: auto;
+            background: #c41e3a;
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 10px 20px;
+            font-family: 'Mountains of Christmas', cursive;
+            font-size: 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: none;
+            margin: 0 auto;
+        }
+
+        #reset-btn:hover {
+            background: #a01830;
+        }
+
+        /* MUSIC BUTTON STYLES */
+        #music-btn {
+            pointer-events: auto;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffd700;
+            color: #ffd700;
+            font-size: 24px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+            z-index: 100;
+        }
+        
+        #music-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Banner Animation Styles */
+        #pre-bowl-banner {
+            position: absolute;
+            top: 25%;
+            left: -100%;
+            width: 80%;
+            height: auto;
+            pointer-events: none;
+            z-index: 30;
+            opacity: 0;
+            filter: drop-shadow(0 0 20px #ffd700);
+        }
+
+        .slide-across {
+            animation: slideAcross 2.5s ease-in-out forwards;
+        }
+
+        /* Opponent Image Styles */
+        #opponent-img {
+            position: absolute;
+            bottom: 0;
+            right: -300px; /* Start off screen */
+            height: 60%;
+            pointer-events: none;
+            z-index: 25;
+            transition: right 0.5s ease-out;
+            filter: drop-shadow(0 0 15px #39FF14);
+        }
+
+        #opponent-img.active {
+            right: 0;
+        }
+
+        @keyframes slideAcross {
+            0% { left: -100%; opacity: 0; }
+            10% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        /* QUIZ MODAL STYLES */
+        #quiz-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+        
+        #quiz-content {
+            background: linear-gradient(180deg, #1a2f4b 0%, #0b1026 100%);
+            border: 4px solid #ffd700;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            box-shadow: 0 0 30px #ffd700;
+            position: relative;
+        }
+
+        #quiz-content h2 {
+            color: #ffd700;
+            margin-top: 0;
+            font-size: 28px;
+            border-bottom: 1px solid #c41e3a;
+            padding-bottom: 10px;
+        }
+
+        #quiz-question {
+            color: white;
+            font-size: 18px;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            background: #2a3b55;
+            color: white;
+            border: 1px solid #4a6b85;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: sans-serif;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        .quiz-option:hover {
+            background: #3a4f6e;
+            border-color: #ffd700;
+        }
+        
+        .quiz-option.correct {
+            background: #155724 !important;
+            border-color: #28a745 !important;
+        }
+        
+        .quiz-option.wrong {
+            background: #721c24 !important;
+            border-color: #dc3545 !important;
+        }
+
+        #quiz-feedback {
+            min-height: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+    </style>
+    <!-- Load Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div id="score-board">
+            <div class="score-col">
+                <div class="frame-indicator">FRAME</div>
+                <div id="frame-display">1</div>
+            </div>
+            <div class="score-col">
+                <div class="frame-indicator">PLAYER</div>
+                <div id="score-display">0</div>
+            </div>
+             <div class="score-col">
+                <div class="frame-indicator karana-score">KARANA</div>
+                <div id="opponent-score-display" class="karana-score">0</div>
+            </div>
+            <div class="score-col">
+                <div class="frame-indicator">PINS</div>
+                <div id="pins-display">10</div>
+            </div>
+        </div>
+
+        <div id="message-area">STRIKE!</div>
+        
+        <!-- Music Toggle Button -->
+        <button id="music-btn">🔇</button>
+
+        <!-- Images -->
+        <img id="pre-bowl-banner" src="obstacle.png" alt="Get Ready to Bowl!">
+        <img id="opponent-img" src="karana.png" alt="Karana Grinch">
+
+        <div style="text-align: center; pointer-events: auto;">
+            <div id="controls-hint">Drag forward to throw!</div>
+            <button id="reset-btn">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal">
+        <div id="quiz-content">
+            <h2>Frame Review</h2>
+            <div id="quiz-question">Question goes here...</div>
+            <div id="quiz-options">
+                <!-- Options injected by JS -->
+            </div>
+            <div id="quiz-feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- QUIZ DATA ---
+        const QUIZ_DATA = [
+            { q: "What writing system did the ancient Egyptians use?", options: ["Cuneiform", "Hieroglyphics", "Latin", "Sanskrit"], answer: 1 },
+            { q: "What material, similar to paper, was made from reeds along the Nile?", options: ["Papyrus", "Clay tablets", "Parchment", "Vellum"], answer: 0 },
+            { q: "Who designed the first step pyramid?", options: ["Khufu", "Khafre", "Imhotep", "Menkaure"], answer: 2 },
+            { q: "Which pyramid was the world's tallest building for 4,000 years?", options: ["The Step Pyramid", "The Great Pyramid of Khufu", "The Pyramid of Menkaure", "The Ziggurat of Ur"], answer: 1 },
+            { q: "What celestial body did Egyptians observe to predict the Nile floods?", options: ["The Moon", "Mars", "The Sun", "The star Sirius"], answer: 3 },
+            { q: "What field of science did Egyptians learn about through mummification?", options: ["Astronomy", "Anatomy", "Physics", "Geology"], answer: 1 },
+            { q: "Who were the officials trained to write and keep records?", options: ["Pharaohs", "Scribes", "Priests", "Farmers"], answer: 1 },
+            { q: "Why did Egyptians develop a solar calendar?", options: ["To track religious holidays", "To predict eclipses", "To help farmers plan planting seasons", "To count the pharaoh's age"], answer: 2 },
+            { q: "What famous statue guards the road to Khafre's pyramid?", options: ["The Sphinx", "The Colossus of Rhodes", "The Statue of Zeus", "The Obelisk"], answer: 0 },
+            { q: "Ancient Egyptian literature was NOT typically written on which of these?", options: ["Papyrus sheets", "Coffins", "Stone monuments", "Steel plates"], answer: 3 },
+            { q: "What determines the number of days in the Egyptian solar calendar?", options: ["300", "354", "365", "400"], answer: 2 },
+            { q: "Modern scholars believe the pyramids were built by whom?", options: ["Slaves", "Foreigners", "Farmers", "Soldiers"], answer: 2 },
+            { q: "'The Book of the Dead' serves as a guide for what?", options: ["Farming techniques", "Building pyramids", "The afterlife", "War strategy"], answer: 2 },
+            { q: "A hieroglyphic symbol represents what?", options: ["Only numbers", "A word or a sound", "A map location", "A god"], answer: 1 },
+            { q: "The temple complex at Karnak contains ruins of what?", options: ["The first pyramid", "The Sphinx", "The world's largest temples", "The Pharaoh's palace"], answer: 2 },
+            { q: "What did the ancient Greeks add to the Egyptian calendar?", options: ["Month names", "Weeks", "Leap years", "Lunar cycles"], answer: 2 },
+            { q: "Which of these is an example of ancient Egyptian chemistry?", options: ["Gunpowder", "Plastic", "Glass and mortar", "Steel"], answer: 2 },
+            { q: "Why did Egyptians switch from a lunar to a solar calendar?", options: ["The moon disappeared", "To match the seasons for farming", "The Pharaoh ordered it", "To predict eclipses"], answer: 1 },
+            { q: "What is the 'Tale of Sinuhe' about?", options: ["A god creating the world", "An official fleeing Egypt", "Building the Sphinx", "A battle with Hittites"], answer: 1 },
+            { q: "What mathematical skill involves the measurement of dimensions?", options: ["Algebra", "Calculus", "Geometry", "Statistics"], answer: 2 }
+        ];
+
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            laneWidth: 10,
+            laneLength: 60,
+            pinScale: 1,
+            ballRadius: 1.2,
+            ballMass: 8, 
+            pinMass: 0.1,
+            quizPoints: 50,
+            grinchBonus: 50, 
+            colors: {
+                floor: 0x1a1a2e,
+                wood: 0x8B4513,
+                ice: 0xaaccff,
+                pin: 0xffffff,
+                grinchPin: 0x39FF14, // Neon Lime Green
+                pinNeck: 0xc41e3a,
+                ball: 0xffd700
+            }
+        };
+
+        // --- GLOBAL VARIABLES ---
+        let scene, camera, renderer, world;
+        let ballBody, ballMesh;
+        let pins = [];
+        let particles;
+        let physicsMaterial;
+        let timeStep = 1 / 60;
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+        
+        let gameState = 'ANIMATING'; 
+        let isOpponentTurn = false;
+        
+        let frame = 1;
+        let throwInFrame = 1;
+        let totalScore = 0;
+        let opponentTotalScore = 0;
+        let currentFrameScore = 0;
+        let pinsDownInFirstThrow = 0;
+        
+        // --- AUDIO ---
+        const bgMusic = new Audio('background.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+        let musicStarted = false;
+
+        // --- TEXTURE GENERATORS ---
+        function createWoodTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(0,0,512,1024);
+            ctx.strokeStyle = '#5c3a1e';
+            ctx.lineWidth = 2;
+            for(let i=0; i<300; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random()*512, 0);
+                ctx.bezierCurveTo(Math.random()*512, 300, Math.random()*512, 700, Math.random()*512, 1024);
+                ctx.stroke();
+            }
+            ctx.fillStyle = '#331100';
+            for(let i=0; i<5; i++) {
+                ctx.beginPath();
+                let x = 100 + i * 75;
+                ctx.moveTo(x, 200);
+                ctx.lineTo(x + 20, 250);
+                ctx.lineTo(x - 20, 250);
+                ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createOrnamentTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(128,128, 20, 128,128, 128);
+            grad.addColorStop(0, '#ffd700');
+            grad.addColorStop(1, '#b8860b');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,256,256);
+            ctx.fillStyle = '#c41e3a';
+            ctx.fillRect(0, 100, 256, 56);
+            ctx.fillStyle = '#ffffff';
+            for(let i=0; i<50; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random()*256, Math.random()*256, 2, 0, Math.PI*2);
+                ctx.fill();
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // --- INIT THREE.JS & PHYSICS ---
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0b1026, 0.02);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 12);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            world = new CANNON.World();
+            world.gravity.set(0, -20, 0); 
+            world.broadphase = new CANNON.NaiveBroadphase();
+            world.solver.iterations = 10;
+
+            physicsMaterial = new CANNON.Material("slipperyMaterial");
+            const physicsContactMaterial = new CANNON.ContactMaterial(
+                physicsMaterial, physicsMaterial,
+                { friction: 0.05, restitution: 0.2 } 
+            );
+            world.addContactMaterial(physicsContactMaterial);
+
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+
+            const spotLight = new THREE.SpotLight(0xffaa00, 1);
+            spotLight.position.set(0, 20, 10);
+            spotLight.castShadow = true;
+            spotLight.angle = Math.PI / 4;
+            spotLight.penumbra = 0.5;
+            spotLight.shadow.mapSize.width = 1024;
+            spotLight.shadow.mapSize.height = 1024;
+            scene.add(spotLight);
+
+            const light1 = new THREE.PointLight(0xff0000, 0.5, 20);
+            light1.position.set(-8, 5, -20);
+            scene.add(light1);
+            const light2 = new THREE.PointLight(0x00ff00, 0.5, 20);
+            light2.position.set(8, 5, -40);
+            scene.add(light2);
+
+            createLane(physicsMaterial);
+            createEnvironment();
+            createBall(physicsMaterial);
+            createPins(physicsMaterial);
+            createSnow();
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousedown', onPointerDown, false);
+            document.addEventListener('mousemove', onPointerMove, false);
+            document.addEventListener('mouseup', onPointerUp, false);
+            document.addEventListener('touchstart', onTouchStart, {passive: false});
+            document.addEventListener('touchmove', onTouchMove, {passive: false});
+            document.addEventListener('touchend', onTouchEnd, {passive: false});
+            
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('music-btn').addEventListener('click', toggleMusic);
+
+            animate();
+            startNewTurn();
+        }
+
+        // --- MUSIC LOGIC ---
+        function toggleMusic() {
+            const btn = document.getElementById('music-btn');
+            if (bgMusic.paused) {
+                bgMusic.play().then(() => {
+                    musicStarted = true;
+                    btn.innerText = "🔊";
+                }).catch(e => console.log("Audio play failed", e));
+            } else {
+                bgMusic.pause();
+                btn.innerText = "🔇";
+            }
+        }
+        
+        function tryStartMusic() {
+            if (!musicStarted) {
+                bgMusic.play().then(() => {
+                    musicStarted = true;
+                    document.getElementById('music-btn').innerText = "🔊";
+                }).catch(() => {});
+            }
+        }
+
+        // --- SCENE CREATION (Abbreviated for brevity, same as previous) ---
+        function createLane(material) {
+            const geometry = new THREE.BoxGeometry(CONFIG.laneWidth, 0.5, CONFIG.laneLength);
+            const texture = createWoodTexture();
+            const mat = new THREE.MeshPhongMaterial({ map: texture, shininess: 100 });
+            const lane = new THREE.Mesh(geometry, mat);
+            lane.position.set(0, -0.25, -CONFIG.laneLength / 2 + 5);
+            lane.receiveShadow = true;
+            scene.add(lane);
+            const shape = new CANNON.Box(new CANNON.Vec3(CONFIG.laneWidth/2, 0.25, CONFIG.laneLength/2));
+            const body = new CANNON.Body({ mass: 0, material: material });
+            body.addShape(shape);
+            body.position.copy(lane.position);
+            world.addBody(body);
+            // Gutters
+            const gutterGeo = new THREE.BoxGeometry(2, 0.5, CONFIG.laneLength);
+            const gutterMat = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const leftGutter = new THREE.Mesh(gutterGeo, gutterMat);
+            leftGutter.position.set(-(CONFIG.laneWidth/2 + 1), -0.5, -CONFIG.laneLength/2 + 5);
+            scene.add(leftGutter);
+            const rightGutter = new THREE.Mesh(gutterGeo, gutterMat);
+            rightGutter.position.set((CONFIG.laneWidth/2 + 1), -0.5, -CONFIG.laneLength/2 + 5);
+            scene.add(rightGutter);
+            const wallShape = new CANNON.Box(new CANNON.Vec3(1, 1, CONFIG.laneLength/2));
+            const leftWall = new CANNON.Body({ mass: 0 });
+            leftWall.addShape(wallShape);
+            leftWall.position.set(-(CONFIG.laneWidth/2 + 2), 0.5, -CONFIG.laneLength/2 + 5);
+            world.addBody(leftWall);
+            const rightWall = new CANNON.Body({ mass: 0 });
+            rightWall.addShape(wallShape);
+            rightWall.position.set((CONFIG.laneWidth/2 + 2), 0.5, -CONFIG.laneLength/2 + 5);
+            world.addBody(rightWall);
+        }
+
+        function createEnvironment() {
+            const floorGeo = new THREE.PlaneGeometry(100, 100);
+            const floorMat = new THREE.MeshPhongMaterial({ color: 0xe0f7fa });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -0.6;
+            floor.receiveShadow = true;
+            scene.add(floor);
+            for(let i=0; i<10; i++) {
+                const height = 3 + Math.random() * 3;
+                const treeGeo = new THREE.ConeGeometry(1.5, height, 8);
+                const treeMat = new THREE.MeshLambertMaterial({ color: 0x0f5e2f });
+                const tree = new THREE.Mesh(treeGeo, treeMat);
+                const side = Math.random() > 0.5 ? 1 : -1;
+                const x = side * (8 + Math.random() * 10);
+                const z = -Math.random() * 50;
+                tree.position.set(x, height/2 - 0.5, z);
+                scene.add(tree);
+                const trunkGeo = new THREE.CylinderGeometry(0.3, 0.3, 1);
+                const trunkMat = new THREE.MeshLambertMaterial({ color: 0x4d3319 });
+                const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                trunk.position.set(x, 0, z);
+                scene.add(trunk);
+            }
+        }
+
+        function createBall(material) {
+            const geometry = new THREE.SphereGeometry(CONFIG.ballRadius, 32, 32);
+            const texture = createOrnamentTexture();
+            const mat = new THREE.MeshStandardMaterial({ 
+                map: texture, 
+                metalness: 0.4, 
+                roughness: 0.1 
+            });
+            ballMesh = new THREE.Mesh(geometry, mat);
+            ballMesh.castShadow = true;
+            scene.add(ballMesh);
+            const shape = new CANNON.Sphere(CONFIG.ballRadius);
+            ballBody = new CANNON.Body({ mass: CONFIG.ballMass, material: material });
+            ballBody.addShape(shape);
+            ballBody.position.set(0, CONFIG.ballRadius, 4); 
+            ballBody.linearDamping = 0.1; 
+            ballBody.angularDamping = 0.1;
+            world.addBody(ballBody);
+        }
+
+        function createPins(material) {
+            const rows = 4;
+            const startZ = -CONFIG.laneLength + 10;
+            const spacing = 1.5;
+            pins = [];
+            const grinchIndex = Math.floor(Math.random() * 10);
+            let count = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c <= r; c++) {
+                    const x = (c - r / 2) * spacing;
+                    const z = startZ - r * (spacing * 0.866); 
+                    const isGrinch = (count === grinchIndex);
+                    createSinglePin(x, z, material, count++, isGrinch);
+                }
+            }
+        }
+
+        function createSinglePin(x, z, material, index, isGrinch) {
+            const pinGroup = new THREE.Group();
+            let matToUse;
+            if (isGrinch) {
+                matToUse = new THREE.MeshStandardMaterial({ 
+                    color: CONFIG.colors.grinchPin,
+                    emissive: CONFIG.colors.grinchPin,
+                    emissiveIntensity: 0.6,
+                    metalness: 0.3,
+                    roughness: 0.2
+                });
+            } else {
+                matToUse = new THREE.MeshPhongMaterial({ color: CONFIG.colors.pin });
+            }
+            const bodyGeo = new THREE.CylinderGeometry(0.4, 0.4, 2.2, 12);
+            const bodyMesh = new THREE.Mesh(bodyGeo, matToUse);
+            bodyMesh.position.y = 1.1;
+            pinGroup.add(bodyMesh);
+            const bellyGeo = new THREE.SphereGeometry(0.6, 12, 12);
+            const bellyMesh = new THREE.Mesh(bellyGeo, matToUse);
+            bellyMesh.position.y = 0.6;
+            bellyMesh.scale.y = 0.8;
+            pinGroup.add(bellyMesh);
+            const neckGeo = new THREE.TorusGeometry(0.38, 0.08, 8, 16);
+            const redMat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.pinNeck });
+            const neckMesh = new THREE.Mesh(neckGeo, redMat);
+            neckMesh.rotation.x = Math.PI/2;
+            neckMesh.position.y = 1.9;
+            pinGroup.add(neckMesh);
+            pinGroup.castShadow = true;
+            scene.add(pinGroup);
+            const shape = new CANNON.Cylinder(0.6, 0.6, 3.2, 10);
+            const q = new CANNON.Quaternion();
+            q.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
+            const pinBody = new CANNON.Body({ mass: CONFIG.pinMass, material: material });
+            pinBody.addShape(shape, new CANNON.Vec3(0, 1.6, 0), q);
+            pinBody.position.set(x, 0, z);
+            pinBody.linearDamping = 0.01;
+            pinBody.angularDamping = 0.01;
+            pinBody.sleepSpeedLimit = 0.5; 
+            pinBody.sleepTimeLimit = 0.5;
+            world.addBody(pinBody);
+            pins.push({ mesh: pinGroup, body: pinBody, initialPos: {x,y:0,z}, isDown: false, index: index, isGrinch: isGrinch, bonusAwarded: false });
+        }
+
+        function createSnow() {
+            const particleCount = 1500;
+            const geom = new THREE.BufferGeometry();
+            const positions = [];
+            for(let i=0; i<particleCount; i++) {
+                positions.push(Math.random() * 60 - 30, Math.random() * 40, Math.random() * 60 - 40);
+            }
+            geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            const canvas = document.createElement('canvas');
+            canvas.width=32; canvas.height=32;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill();
+            const tex = new THREE.CanvasTexture(canvas);
+            const mat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.5,
+                map: tex,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            particles = new THREE.Points(geom, mat);
+            scene.add(particles);
+        }
+
+        // --- GAMEPLAY LOGIC ---
+        function updatePhysics() {
+            world.step(timeStep);
+            ballMesh.position.copy(ballBody.position);
+            ballMesh.quaternion.copy(ballBody.quaternion);
+            pins.forEach(pin => {
+                pin.mesh.position.copy(pin.body.position);
+                pin.mesh.quaternion.copy(pin.body.quaternion);
+            });
+            if(ballBody.position.y < -10) {
+                if(gameState === 'ROLLING') {
+                    settleRound();
+                }
+            }
+            if(gameState === 'ROLLING' && ballBody.position.z > -45) {
+                const targetZ = ballBody.position.z + 8;
+                camera.position.z += (targetZ - camera.position.z) * 0.1;
+                camera.position.x += (ballBody.position.x * 0.5 - camera.position.x) * 0.1;
+                camera.lookAt(ballBody.position.x, 0, ballBody.position.z - 10);
+            }
+        }
+
+        function settleRound() {
+            gameState = 'SETTLING';
+            
+            setTimeout(() => {
+                let downCount = 0;
+                let activePins = []; 
+                let standingPinIndices = [];
+                let grinchBonusThisTurn = false;
+
+                pins.forEach((pin, idx) => {
+                    const v = new CANNON.Vec3(0,1,0);
+                    pin.body.quaternion.vmult(v, v);
+                    
+                    if (v.y < 0.5 || pin.body.position.y < -0.5 || Math.abs(pin.body.position.x) > 10) {
+                        pin.isDown = true;
+                        if(pin.body.world) world.removeBody(pin.body);
+                        scene.remove(pin.mesh);
+                        
+                        // GRINCH LOGIC
+                        if(pin.isGrinch && !pin.bonusAwarded) {
+                            pin.bonusAwarded = true;
+                            // Only award Bonus if it's Player's turn
+                            if(!isOpponentTurn) {
+                                currentFrameScore += CONFIG.grinchBonus;
+                                grinchBonusThisTurn = true;
+                            }
+                        }
+                    } else {
+                        standingPinIndices.push(idx);
+                    }
+                    if (pin.isDown) downCount++;
+                });
+
+                let hitCount = downCount;
+                if(throwInFrame === 2) {
+                    hitCount = downCount - pinsDownInFirstThrow;
+                }
+                
+                let message = "";
+                
+                // Logic for SPLIT, SPARE, STRIKE
+                if (throwInFrame === 1) {
+                    if (downCount === 10) {
+                        message = "STRIKE!";
+                        currentFrameScore += 20; 
+                        finishFrame();
+                    } else {
+                        const headPinDown = pins[0].isDown;
+                        let isSplit = false;
+                        if (headPinDown && standingPinIndices.length >= 2) {
+                             let minX = 100, maxX = -100;
+                             standingPinIndices.forEach(idx => {
+                                 let p = pins[idx].body.position.x;
+                                 if(p < minX) minX = p;
+                                 if(p > maxX) maxX = p;
+                             });
+                             if (maxX - minX > 2.5) { isSplit = true; }
+                        }
+
+                        if (isSplit) { message = "SPLIT!"; } 
+                        else { message = hitCount + " DOWN"; }
+                        
+                        currentFrameScore += hitCount;
+                        pinsDownInFirstThrow = downCount;
+                        throwInFrame = 2;
+                        
+                        if(!grinchBonusThisTurn) {
+                            if(isOpponentTurn) {
+                                showMessage("KARANA'S\n2ND THROW");
+                            } else {
+                                showMessage("SECOND THROW");
+                            }
+                        }
+                        
+                        // Continue current turn
+                        gameState = isOpponentTurn ? 'AI_AIMING' : 'AIMING';
+                        
+                        if(isOpponentTurn) {
+                            setTimeout(aiThrow, 2000); // Give a bit more time for message to read
+                        }
+                        
+                        resetBall();
+                    }
+                } else {
+                    // Second throw
+                    if (downCount === 10) {
+                         message = "SPARE!";
+                         currentFrameScore += (10 - pinsDownInFirstThrow) + 5; 
+                    } else {
+                        message = hitCount + " DOWN";
+                        currentFrameScore += hitCount;
+                    }
+                    finishFrame();
+                }
+
+                if(grinchBonusThisTurn) {
+                    if(message === "SECOND THROW") message = "";
+                    message += "\nGRINCH BONUS!";
+                }
+
+                if(message !== "") showMessage(message);
+                
+                if(isOpponentTurn) {
+                    document.getElementById('opponent-score-display').innerText = opponentTotalScore + currentFrameScore;
+                } else {
+                    document.getElementById('score-display').innerText = totalScore + currentFrameScore;
+                }
+                
+                document.getElementById('pins-display').innerText = 10 - downCount;
+
+            }, 2000); 
+        }
+
+        function finishFrame() {
+            if(isOpponentTurn) {
+                opponentTotalScore += currentFrameScore;
+                document.getElementById('opponent-score-display').innerText = opponentTotalScore;
+            } else {
+                totalScore += currentFrameScore;
+                document.getElementById('score-display').innerText = totalScore;
+            }
+
+            currentFrameScore = 0;
+            pinsDownInFirstThrow = 0;
+            throwInFrame = 1;
+            
+            if (!isOpponentTurn) {
+                // Player finished, show quiz
+                setTimeout(() => {
+                    showQuiz(frame);
+                }, 1500);
+            } else {
+                // Opponent finished, advance to next Player frame
+                setTimeout(() => {
+                    finishOpponentTurn();
+                }, 1500);
+            }
+        }
+
+        // --- OPPONENT LOGIC ---
+        function startOpponentTurn() {
+            isOpponentTurn = true;
+            gameState = 'AI_AIMING'; // FIX: Explicitly set state so resetBall() is allowed to run
+            
+            document.getElementById('controls-hint').style.display = 'none';
+            document.getElementById('opponent-img').classList.add('active');
+            showMessage("KARANA'S TURN");
+            
+            resetPins();
+            resetBall();
+            
+            setTimeout(() => {
+                aiThrow();
+            }, 2000);
+        }
+
+        function aiThrow() {
+            if(!isOpponentTurn) return;
+            
+            gameState = 'ROLLING';
+            
+            // AI Logic: COMPETITIVE MODE
+            // Aim mostly for the center (pocket) with slight variation
+            const startX = (Math.random() * 1.0) - 0.5; // -0.5 to 0.5 (Tight center aim)
+            ballBody.position.x = startX;
+            ballBody.velocity.set(0,0,0);
+            ballBody.angularVelocity.set(0,0,0);
+            
+            // Stronger, consistent power
+            const power = 70 + Math.random() * 10; // 70 to 80 force
+            
+            // Very subtle curve, mostly straight
+            // aiming slightly to counteract startX if needed, or just straight
+            const curve = (Math.random() - 0.5) * 0.2; // Very low curve
+
+            // Apply velocity
+            ballBody.velocity.set(curve, 0, -power);
+            // Spin helps keep it straight or hook slightly
+            ballBody.angularVelocity.set(power, 0, curve * -5);
+
+            setTimeout(() => {
+                if (gameState === 'ROLLING') settleRound();
+            }, 6000);
+        }
+
+        function finishOpponentTurn() {
+            isOpponentTurn = false;
+            document.getElementById('opponent-img').classList.remove('active');
+            proceedToNextFrame();
+        }
+
+        // --- QUIZ LOGIC ---
+        function showQuiz(currentFrame) {
+            gameState = 'QUIZ';
+            const modal = document.getElementById('quiz-modal');
+            const qEl = document.getElementById('quiz-question');
+            const oEl = document.getElementById('quiz-options');
+            const fEl = document.getElementById('quiz-feedback');
+            
+            modal.style.display = 'flex';
+            oEl.innerHTML = '';
+            fEl.innerText = '';
+            
+            const qData = QUIZ_DATA[(currentFrame - 1) % QUIZ_DATA.length];
+            qEl.innerText = qData.q;
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'quiz-option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx, qData.answer, btn);
+                oEl.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct, btn) {
+            const fEl = document.getElementById('quiz-feedback');
+            const modal = document.getElementById('quiz-modal');
+            
+            if (selected === correct) {
+                btn.classList.add('correct');
+                fEl.style.color = '#28a745';
+                totalScore += CONFIG.quizPoints;
+                document.getElementById('score-display').innerText = totalScore;
+                fEl.innerText = "Correct! + " + CONFIG.quizPoints + " points!";
+                
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    // Pass turn to Opponent
+                    startOpponentTurn();
+                }, 1500);
+            } else {
+                btn.classList.add('wrong');
+                fEl.style.color = '#dc3545';
+                fEl.innerText = "Incorrect. Try again!";
+            }
+        }
+
+        function proceedToNextFrame() {
+            frame++;
+            if (frame > 10) {
+                let msg = "GAME OVER";
+                if(totalScore > opponentTotalScore) msg += "\nYOU WIN!";
+                else msg += "\nKARANA WINS!";
+                showMessage(msg);
+                document.getElementById('reset-btn').style.display = 'block';
+                document.getElementById('controls-hint').style.display = 'none';
+            } else {
+                resetPins();
+                document.getElementById('frame-display').innerText = frame;
+                document.getElementById('pins-display').innerText = "10";
+                startNewTurn();
+            }
+        }
+
+        function startNewTurn() {
+            triggerBannerAnimation(() => {
+                gameState = 'AIMING';
+                document.getElementById('controls-hint').style.display = 'block';
+                resetBall();
+            });
+        }
+
+        function triggerBannerAnimation(onComplete) {
+            gameState = 'ANIMATING';
+            document.getElementById('controls-hint').style.display = 'none';
+            const banner = document.getElementById('pre-bowl-banner');
+            banner.classList.remove('slide-across');
+            void banner.offsetWidth; 
+            let completeCalled = false;
+            const finish = () => {
+                if(completeCalled) return;
+                completeCalled = true;
+                banner.classList.remove('slide-across');
+                if (onComplete) onComplete();
+            };
+            banner.addEventListener('animationend', () => finish(), {once:true});
+            banner.classList.add('slide-across');
+            setTimeout(finish, 2600); 
+        }
+
+        function resetBall() {
+            // Allow reset if aiming or ai_aiming
+            if (gameState !== 'AIMING' && gameState !== 'AI_AIMING') return; 
+            
+            // Only show hint if Player turn
+            if(!isOpponentTurn) {
+                const hint = document.getElementById('controls-hint');
+                hint.style.display = 'block';
+                hint.style.opacity = '1';
+            }
+
+            ballBody.velocity.set(0,0,0);
+            ballBody.angularVelocity.set(0,0,0);
+            ballBody.position.set(0, CONFIG.ballRadius, 4);
+            ballBody.quaternion.set(0,0,0,1);
+            ballBody.wakeUp();
+            new TWEEN_CameraReset();
+        }
+
+        function TWEEN_CameraReset() {
+            const startPos = camera.position.clone();
+            const targetPos = new THREE.Vector3(0, 5, 12);
+            let alpha = 0;
+            function loop() {
+                alpha += 0.05;
+                if(alpha > 1) alpha = 1;
+                camera.position.lerpVectors(startPos, targetPos, alpha);
+                camera.lookAt(0, 0, -20);
+                if(alpha < 1 && (gameState === 'AIMING' || gameState === 'AI_AIMING')) requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        function resetPins() {
+            pins.forEach(pin => {
+                if(pin.body.world) world.removeBody(pin.body);
+                scene.remove(pin.mesh);
+            });
+            createPins(physicsMaterial); 
+        }
+        
+        function resetGame() {
+            frame = 1;
+            totalScore = 0;
+            opponentTotalScore = 0;
+            currentFrameScore = 0;
+            throwInFrame = 1;
+            pinsDownInFirstThrow = 0;
+            isOpponentTurn = false;
+            
+            document.getElementById('frame-display').innerText = 1;
+            document.getElementById('score-display').innerText = 0;
+            document.getElementById('opponent-score-display').innerText = 0;
+            document.getElementById('pins-display').innerText = 10;
+            document.getElementById('reset-btn').style.display = 'none';
+            document.getElementById('opponent-img').classList.remove('active');
+            
+            resetPins();
+            startNewTurn();
+        }
+
+        function showMessage(text) {
+            const el = document.getElementById('message-area');
+            el.innerText = text;
+            el.style.opacity = 1;
+            el.style.transform = "translate(-50%, -50%) scale(1.2)";
+            setTimeout(() => {
+                el.style.opacity = 0;
+                el.style.transform = "translate(-50%, -50%) scale(1)";
+            }, 2000);
+        }
+
+        // --- INPUT HANDLING ---
+        function onPointerDown(e) {
+            tryStartMusic();
+            if(gameState !== 'AIMING' || isOpponentTurn) return;
+            isDragging = true;
+            dragStart.x = e.clientX || e.touches[0].clientX;
+            dragStart.y = e.clientY || e.touches[0].clientY;
+        }
+
+        function onPointerMove(e) {
+            if(gameState !== 'AIMING' || isOpponentTurn) return;
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            if(!isDragging) {
+                const xPct = (clientX / window.innerWidth) * 2 - 1;
+                const newX = xPct * 4; 
+                ballBody.position.x = newX;
+                ballBody.velocity.set(0,0,0);
+                ballBody.angularVelocity.set(0,0,0);
+            }
+        }
+
+        function onPointerUp(e) {
+            if(!isDragging || gameState !== 'AIMING' || isOpponentTurn) return;
+            isDragging = false;
+            const endX = e.clientX || e.changedTouches[0].clientX;
+            const endY = e.clientY || e.changedTouches[0].clientY;
+            const dx = endX - dragStart.x;
+            const dy = endY - dragStart.y; 
+
+            if (dy < -50) { 
+                gameState = 'ROLLING';
+                const power = Math.min(Math.abs(dy) * 0.25, 60) + 20;
+                const curve = dx * 0.025;
+                ballBody.velocity.set(curve, 0, -power);
+                ballBody.angularVelocity.set(power, 0, curve * -2);
+                document.getElementById('controls-hint').style.opacity = 0;
+                setTimeout(() => {
+                    if (gameState === 'ROLLING') {
+                        settleRound();
+                    }
+                }, 6000);
+            }
+        }
+        
+        function onTouchStart(e) { onPointerDown(e); }
+        function onTouchMove(e) { e.preventDefault(); onPointerMove(e); }
+        function onTouchEnd(e) { onPointerUp(e); }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if(gameState !== 'QUIZ' && gameState !== 'ANIMATING') {
+                updatePhysics();
+            }
+            if(particles) {
+                const positions = particles.geometry.attributes.position.array;
+                for(let i=1; i<positions.length; i+=3) {
+                    positions[i] -= 0.1; 
+                    if(positions[i] < 0) positions[i] = 40; 
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+                particles.rotation.y += 0.001;
+            }
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
