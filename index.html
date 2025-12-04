@@ -317,7 +317,6 @@
         }
 
     </style>
-    <!-- Load Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
@@ -345,10 +344,8 @@
 
         <div id="message-area">STRIKE!</div>
         
-        <!-- Music Toggle Button -->
-        <button id="music-btn">🔇</button>
+        <button id="music-btn">這</button>
 
-        <!-- Images -->
         <img id="pre-bowl-banner" src="obstacle.png" alt="Get Ready to Bowl!">
         <img id="opponent-img" src="karana.png" alt="Karana Grinch">
 
@@ -358,7 +355,6 @@
         </div>
     </div>
 
-    <!-- Start Screen -->
     <div id="start-screen">
         <div id="start-content">
             <h1>Santa's Strike</h1>
@@ -370,7 +366,6 @@
         </div>
     </div>
 
-    <!-- Quiz Modal -->
     <div id="quiz-modal">
         <div id="quiz-content">
             <h2>Frame Review</h2>
@@ -380,7 +375,6 @@
         </div>
     </div>
 
-    <!-- Leaderboard Modal -->
     <div id="leaderboard-modal">
         <div id="leaderboard-content">
             <h2>Top 10 High Scores</h2>
@@ -401,8 +395,7 @@
                     </tr>
                 </thead>
                 <tbody id="scores-body">
-                    <!-- Scores populated by JS -->
-                </tbody>
+                    </tbody>
             </table>
             <div id="connection-status">Connecting...</div>
             <br>
@@ -576,8 +569,8 @@
             laneLength: 60,
             pinScale: 1,
             ballRadius: 1.2,
-            ballMass: 8, 
-            pinMass: 0.1,
+            ballMass: 12, // INCREASED MASS to knock things over harder
+            pinMass: 0.1, // Reduced for easier toppling
             quizPoints: 1, 
             grinchBonus: 50, 
             colors: {
@@ -701,7 +694,7 @@
             physicsMaterial = new CANNON.Material("slipperyMaterial");
             const physicsContactMaterial = new CANNON.ContactMaterial(
                 physicsMaterial, physicsMaterial,
-                { friction: 0.05, restitution: 0.2 } 
+                { friction: 0.05, restitution: 0.3 } // Increased Restitution for bounce
             );
             world.addContactMaterial(physicsContactMaterial);
 
@@ -777,11 +770,11 @@
             if (bgMusic.paused) {
                 bgMusic.play().then(() => {
                     musicStarted = true;
-                    btn.innerText = "🔊";
+                    btn.innerText = "矧";
                 }).catch(e => console.log("Audio play failed", e));
             } else {
                 bgMusic.pause();
-                btn.innerText = "🔇";
+                btn.innerText = "這";
             }
         }
         
@@ -789,7 +782,7 @@
             if (!musicStarted) {
                 bgMusic.play().then(() => {
                     musicStarted = true;
-                    document.getElementById('music-btn').innerText = "🔊";
+                    document.getElementById('music-btn').innerText = "矧";
                 }).catch(() => {});
             }
         }
@@ -922,13 +915,16 @@
             pinGroup.add(neckMesh);
             pinGroup.castShadow = true;
             scene.add(pinGroup);
-            const shape = new CANNON.Cylinder(0.6, 0.6, 3.2, 10);
+            
+            // PHYSICS HACK: Use a thinner cylinder for physics than visual to make them unstable
+            const shape = new CANNON.Cylinder(0.35, 0.35, 3.2, 10);
+            
             const q = new CANNON.Quaternion();
             q.setFromAxisAngle(new CANNON.Vec3(1,0,0), -Math.PI/2);
             const pinBody = new CANNON.Body({ mass: CONFIG.pinMass, material: material });
             pinBody.addShape(shape, new CANNON.Vec3(0, 1.6, 0), q);
             pinBody.position.set(x, 0, z);
-            pinBody.linearDamping = 0.01;
+            pinBody.linearDamping = 0.0; // Remove air resistance so they fly
             pinBody.angularDamping = 0.01;
             pinBody.sleepSpeedLimit = 0.5; 
             pinBody.sleepTimeLimit = 0.5;
@@ -1144,24 +1140,49 @@
             
             gameState = 'ROLLING';
             
-            // AI Logic: COMPETITIVE MODE
-            // Aim mostly for the center (pocket) with slight variation
-            const startX = (Math.random() * 1.0) - 0.5; // -0.5 to 0.5 (Tight center aim)
+            // KARANA "GOOD" AI LOGIC
+            let startX = 0;
+            let curve = 0;
+            let power = 85; // High power
+
+            if (throwInFrame === 1) {
+                // First Throw: Aim for the pocket (Strike Logic)
+                // Start slightly right (0.2), hook left (-0.1) into the 1-3 pocket
+                startX = 0.4;
+                curve = -0.15;
+            } else {
+                // Second Throw: Aim at remaining pins (Spare Logic)
+                let activePinsX = 0;
+                let activeCount = 0;
+                pins.forEach(p => {
+                    if(!p.isDown) {
+                        activePinsX += p.body.position.x;
+                        activeCount++;
+                    }
+                });
+                
+                if (activeCount > 0) {
+                    startX = activePinsX / activeCount;
+                    // Clamp to lane width so she doesn't throw into gutter
+                    if(startX > 4) startX = 4;
+                    if(startX < -4) startX = -4;
+                    
+                    // Shoot straight at the spare
+                    curve = 0;
+                } else {
+                    // Fallback just in case logic drifts
+                    startX = 0;
+                }
+            }
+            
             ballBody.position.x = startX;
             ballBody.velocity.set(0,0,0);
             ballBody.angularVelocity.set(0,0,0);
             
-            // Stronger, consistent power
-            const power = 70 + Math.random() * 10; // 70 to 80 force
-            
-            // Very subtle curve, mostly straight
-            // aiming slightly to counteract startX if needed, or just straight
-            const curve = (Math.random() - 0.5) * 0.2; // Very low curve
-
             // Apply velocity
             ballBody.velocity.set(curve, 0, -power);
             // Spin helps keep it straight or hook slightly
-            ballBody.angularVelocity.set(power, 0, curve * -5);
+            ballBody.angularVelocity.set(power, 0, curve * -10);
 
             setTimeout(() => {
                 if (gameState === 'ROLLING') settleRound();
